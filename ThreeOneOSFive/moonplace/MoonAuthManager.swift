@@ -1,6 +1,9 @@
 import SwiftUI
 import Combine
 
+// Importar el SDK de AuthlyX
+import AuthlyX
+
 class MoonAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isLoading = false
@@ -8,10 +11,19 @@ class MoonAuthManager: ObservableObject {
     @Published var username: String?
     @Published var justWelcomed = false
 
-    private var sessionID: String?
     private let keychainService = "MoonAuth"
+    private let authlyX: AuthlyX
 
     init() {
+        // Inicializar con tus credenciales de AuthlyX
+        authlyX = AuthlyX(
+            ownerId: "530bfb579331",
+            appName: "Moonexternal",
+            version: "1.0.0",
+            secret: "AoSZF4szatA7uxPgVIqdQoyu7ISgaAqkxHjZNdX2"
+        )
+        // Opcional: desactivar logs en producción
+        // authlyX.debug = false
         autoLogin()
     }
 
@@ -23,17 +35,15 @@ class MoonAuthManager: ObservableObject {
 
         Task {
             do {
-                _ = try await AuthonClient.initialize()
-                let response = try await AuthonClient.login(username: storedUsername, password: storedPassword)
+                let response = try await authlyX.login(username: storedUsername, password: storedPassword)
                 if response.success {
-                    self.sessionID = response.sessionId ?? UUID().uuidString
                     await MainActor.run {
                         self.username = storedUsername
                         self.isAuthenticated = true
                         self.justWelcomed = true
                     }
                 } else {
-                    throw AuthonClient.AuthonError.server(response.message ?? "Auto-login failed")
+                    throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Auto-login failed"])
                 }
             } catch {
                 await MainActor.run {
@@ -49,33 +59,23 @@ class MoonAuthManager: ObservableObject {
 
         Task {
             do {
-                _ = try await AuthonClient.initialize()
-
-                let response: AuthonClient.Response
+                let response: AuthlyX.Response
                 if isRegister {
                     guard let license = license, !license.isEmpty else {
-                        throw AuthonClient.AuthonError.server("License key requerida para registro")
+                        throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: "License key requerida para registro"])
                     }
-                    response = try await AuthonClient.register(username: username, password: password, license: license)
+                    response = try await authlyX.register(username: username, password: password, license: license)
                 } else {
-                    response = try await AuthonClient.login(username: username, password: password)
+                    response = try await authlyX.login(username: username, password: password)
                 }
 
                 guard response.success else {
-                    throw AuthonClient.AuthonError.server(response.message ?? "Error desconocido")
+                    throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Error desconocido"])
                 }
 
+                // Guardar credenciales en Keychain
                 KeychainHelper.save(service: keychainService, account: "username", value: username)
                 KeychainHelper.save(service: keychainService, account: "password", value: password)
-
-                if let accessToken = response.accessToken {
-                    KeychainHelper.save(service: keychainService, account: "accessToken", value: accessToken)
-                }
-                if let refreshToken = response.refreshToken {
-                    KeychainHelper.save(service: keychainService, account: "refreshToken", value: refreshToken)
-                }
-
-                self.sessionID = response.sessionId ?? UUID().uuidString
 
                 await MainActor.run {
                     self.username = username
@@ -95,16 +95,11 @@ class MoonAuthManager: ObservableObject {
 
     func logout() {
         Task {
-            if let sessionId = sessionID {
-                _ = try? await AuthonClient.logout(sessionId: sessionId)
-            }
+            _ = try? await authlyX.logout()
         }
         KeychainHelper.delete(service: keychainService, account: "username")
         KeychainHelper.delete(service: keychainService, account: "password")
-        KeychainHelper.delete(service: keychainService, account: "accessToken")
-        KeychainHelper.delete(service: keychainService, account: "refreshToken")
         isAuthenticated = false
-        sessionID = nil
         username = nil
         justWelcomed = false
     }
