@@ -72,6 +72,9 @@
 		3105CB13 /* MoonAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB03; };
 		3105CB14 /* MoonLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB04; };
 		3105CB15 /* MoonPlaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB05; };
+		3105CB20 /* AuthlyXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB06; };
+		3105CB21 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB07; };
+		3105CB22 /* MoonParticleBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB08; };
 		3105CD01 /* MOON_FFTH_ANTENA_0.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105CD17; };
 		3105CD02 /* MOON_FFTH_ANTENA_1.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105CD18; };
 		3105CD03 /* MOON_FFTH_ANTENA_2.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105CD19; };
@@ -174,6 +177,9 @@
 		3105CB03 /* MoonAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonAuthManager.swift; sourceTree = "<group>"; };
 		3105CB04 /* MoonLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonLoginView.swift; sourceTree = "<group>"; };
 		3105CB05 /* MoonPlaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPlaceView.swift; sourceTree = "<group>"; };
+		3105CB06 /* AuthlyXClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthlyXClient.swift; sourceTree = "<group>"; };
+		3105CB07 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		3105CB08 /* MoonParticleBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonParticleBackground.swift; sourceTree = "<group>"; };
 		3105CD17 /* MOON_FFTH_ANTENA_0.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = MOON_FFTH_ANTENA_0.3105; sourceTree = "<group>"; };
 		3105CD18 /* MOON_FFTH_ANTENA_1.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = MOON_FFTH_ANTENA_1.3105; sourceTree = "<group>"; };
 		3105CD19 /* MOON_FFTH_ANTENA_2.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = MOON_FFTH_ANTENA_2.3105; sourceTree = "<group>"; };
@@ -254,6 +260,7 @@
 			isa = PBXGroup;
 			children = (
 				3105A098 /* DesignSystem.swift */,
+				3105CB08 /* MoonParticleBackground.swift */,
 				3105A023 /* SettingsView.swift */,
 				3105A024 /* LogView.swift */,
 				3105A105 /* AppDataBrowserView.swift */,
@@ -274,6 +281,7 @@
 			isa = PBXGroup;
 			children = (
 				3105A099 /* Localization.swift */,
+				3105CB07 /* KeychainHelper.swift */,
 				3105A104 /* ContainerStore.swift */,
 				3105A108 /* ContainerIdentityResolver.swift */,
 				3105A109 /* ContainerBrowserLogic.swift */,
@@ -318,6 +326,7 @@
 			isa = PBXGroup;
 			children = (
 				3105CB01 /* MoonConfig.swift */,
+				3105CB06 /* AuthlyXClient.swift */,
 				3105CB03 /* MoonAuthManager.swift */,
 				3105CB04 /* MoonLoginView.swift */,
 				3105CB05 /* MoonPlaceView.swift */,
@@ -478,9 +487,12 @@
 				3105I200,
 				3105I201,
 				3105CB11,
+				3105CB20,
+				3105CB21,
 				3105CB13,
 				3105CB14,
 				3105CB15,
+				3105CB22,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
