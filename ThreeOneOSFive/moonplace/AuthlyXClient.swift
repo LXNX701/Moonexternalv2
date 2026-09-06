@@ -2,7 +2,8 @@ import Foundation
 
 enum AuthlyXClient {
     private static var apiBase: URL {
-        URL(string: "https://api.authlyx.com/v1/")!
+        // Usar el dominio correcto de AuthlyX
+        URL(string: "https://api.authly.cc/v1/")!
     }
 
     private static let session: URLSession = {
