@@ -1,7 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Menú principal de MOONZAZA x Cheat tras iniciar sesión.
 struct MoonPlaceView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var auth: MoonAuthManager
@@ -16,7 +15,6 @@ struct MoonPlaceView: View {
         var id: String { rawValue }
     }
 
-    /// Catálogo de parches incluidos en la app
     static let bundledMoonV2Patches: [(resource: String, name: String)] = [
         ("MOON_FFTH_ANTENA_0", "FFTH - Antena 1"),
         ("MOON_FFTH_ANTENA_1", "FFTH - Antena 2"),
@@ -39,21 +37,17 @@ struct MoonPlaceView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fondo con partículas
                 MoonParticleBackground()
                     .overlay(
-                        LinearGradient.moonBackgroundGradient
-                            .opacity(0.3)
+                        LinearGradient.moonBackgroundGradient.opacity(0.3)
                     )
 
                 VStack(spacing: 0) {
-                    // Cabecera de estado del exploit (rediseñada)
                     ExploitStatusHeader(appState: appState)
 
                     Divider()
                         .background(Color.moonPrimary.opacity(0.3))
 
-                    // Picker estilizado
                     Picker("", selection: $section) {
                         ForEach(MoonSection.allCases) { s in
                             Text(s.rawValue).tag(s)
@@ -65,7 +59,6 @@ struct MoonPlaceView: View {
                     .colorMultiply(.white)
                     .tint(.moonPrimary)
 
-                    // Contenido según sección
                     ScrollView {
                         switch section {
                         case .moonV1:
@@ -78,21 +71,17 @@ struct MoonPlaceView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                // Título personalizado con logo
                 ToolbarItem(placement: .principal) {
                     HStack(spacing: 8) {
-                        // Tu logo (debe estar en Assets como "MoonLogo")
                         Image("MoonLogo")
                             .resizable()
                             .scaledToFit()
-                            .frame(height: 30)
+                            .frame(height: 28)
                             .clipShape(Circle())
 
                         Text("MOONZAZA")
                             .font(.headline.weight(.bold))
-                            .foregroundStyle(
-                                LinearGradient.moonGradient
-                            )
+                            .foregroundColor(.moonPrimary)
                         + Text(" x ")
                             .font(.headline)
                             .foregroundColor(.white)
@@ -102,7 +91,6 @@ struct MoonPlaceView: View {
                     }
                 }
 
-                // Botón de menú de usuario
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
@@ -119,10 +107,8 @@ struct MoonPlaceView: View {
                         }
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
-                            .foregroundStyle(
-                                LinearGradient.moonGradient
-                            )
                             .font(.title3)
+                            .foregroundColor(.moonPrimary)
                     }
                 }
             }
@@ -160,9 +146,7 @@ struct MoonPlaceView: View {
     private func welcomeBadge(_ user: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "moon.stars.fill")
-                .foregroundStyle(
-                    LinearGradient.moonGradient
-                )
+                .foregroundColor(.moonPrimary)
             Text("Welcome to MOONZAZA, \(user)")
                 .font(.subheadline.weight(.semibold))
                 .foregroundColor(.white)
@@ -183,14 +167,13 @@ struct MoonPlaceView: View {
     }
 }
 
-// MARK: - Cabecera de estado del exploit (rediseñada)
+// MARK: - Subviews (mantengo las mismas que ya tenías, solo ajusto colores)
 
 private struct ExploitStatusHeader: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
         HStack(spacing: 12) {
-            // Indicador de estado con animación
             Circle()
                 .fill(statusColor)
                 .frame(width: 10, height: 10)
@@ -247,8 +230,6 @@ private struct ExploitStatusHeader: View {
     }
 }
 
-// MARK: - MoonV1 Section (rediseñada)
-
 private struct MoonV1Section: View {
     @ObservedObject var store: PatchProjectStore
     @State private var showImporter = false
@@ -259,15 +240,15 @@ private struct MoonV1Section: View {
                 VStack(spacing: 16) {
                     Image(systemName: "moonphase.new.moon")
                         .font(.system(size: 50, weight: .light))
-                        .foregroundStyle(
-                            LinearGradient.moonGradient
-                        )
+                        .foregroundColor(.moonPrimary)
 
                     Text("🌙 MoonV1")
-                        .moonTitleStyle()
+                        .font(.title2.weight(.bold))
+                        .foregroundColor(.white)
 
                     Text("Import your own .3105 patches created with 3105.")
-                        .moonSubtitleStyle()
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
 
                     Button {
@@ -312,8 +293,6 @@ private struct MoonV1Section: View {
     }
 }
 
-// MARK: - MoonV2 Section (rediseñada)
-
 private struct MoonV2Section: View {
     @ObservedObject var store: PatchProjectStore
     @State private var family = "FFTH"
@@ -327,7 +306,6 @@ private struct MoonV2Section: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Filtros estilizados
             VStack(spacing: 12) {
                 Picker("Familia", selection: $family) {
                     Text("FFTH").tag("FFTH")
@@ -348,7 +326,6 @@ private struct MoonV2Section: View {
             .padding(.horizontal, 20)
             .padding(.top, 12)
 
-            // Lista de parches filtrados
             List {
                 ForEach(filteredEntries, id: \.resource) { entry in
                     bundledRow(entry)
@@ -383,9 +360,9 @@ private struct MoonV2Section: View {
 
         HStack(spacing: 14) {
             Image(systemName: isInstalled ? "checkmark.circle.fill" : "shippingbox.fill")
-                .foregroundStyle(isInstalled ? .green : LinearGradient.moonGradient)
                 .font(.title3)
                 .frame(width: 30)
+                .foregroundColor(isInstalled ? .green : .moonPrimary)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)
@@ -393,7 +370,7 @@ private struct MoonV2Section: View {
                     .foregroundColor(.white)
                 Text(isInstalled ? "✅ Installed" : "📥 Ready to install")
                     .font(.caption)
-                    .foregroundStyle(isInstalled ? .green : .gray)
+                    .foregroundColor(isInstalled ? .green : .gray)
             }
 
             Spacer()
@@ -438,8 +415,6 @@ private struct MoonV2Section: View {
     }
 }
 
-// MARK: - MoonPatchRow (rediseñada)
-
 private struct MoonPatchRow: View {
     let item: PatchLibraryItem
     @ObservedObject var store: PatchProjectStore
@@ -457,9 +432,9 @@ private struct MoonPatchRow: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
                 Image(systemName: item.isLocked ? "lock.doc.fill" : "doc.fill")
-                    .foregroundStyle(item.isLocked ? .gray : LinearGradient.moonGradient)
                     .font(.title3)
                     .frame(width: 30)
+                    .foregroundColor(item.isLocked ? .gray : .moonPrimary)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.project?.name ?? "Locked patch")
@@ -473,7 +448,7 @@ private struct MoonPatchRow: View {
                                 .frame(width: 6, height: 6)
                             Text(receipt != nil ? "Applied" : "Not applied")
                                 .font(.caption)
-                                .foregroundStyle(receipt != nil ? .green : .gray)
+                                .foregroundColor(receipt != nil ? .green : .gray)
                         }
                     }
                 }
@@ -489,7 +464,7 @@ private struct MoonPatchRow: View {
             if item.isLocked {
                 Text("🔒 Password protected. Unlock from the original 3105 Patches section.")
                     .font(.caption2)
-                    .foregroundStyle(.gray)
+                    .foregroundColor(.gray)
                     .padding(.leading, 44)
             } else {
                 HStack(spacing: 12) {
