@@ -25,9 +25,8 @@ class MoonAuthManager: ObservableObject {
             do {
                 _ = try await AuthonClient.initialize()
                 let response = try await AuthonClient.login(username: storedUsername, password: storedPassword)
-                if response.success, let accessToken = response.accessToken {
-                    // Guardar tokens si es necesario
-                    self.sessionID = accessToken
+                if response.success {
+                    self.sessionID = response.sessionId ?? UUID().uuidString
                     await MainActor.run {
                         self.username = storedUsername
                         self.isAuthenticated = true
@@ -57,33 +56,26 @@ class MoonAuthManager: ObservableObject {
                     guard let license = license, !license.isEmpty else {
                         throw AuthonClient.AuthonError.server("License key requerida para registro")
                     }
-                    response = try await AuthonClient.register(
-                        username: username,
-                        password: password,
-                        license: license
-                    )
+                    response = try await AuthonClient.register(username: username, password: password, license: license)
                 } else {
-                    response = try await AuthonClient.login(
-                        username: username,
-                        password: password
-                    )
+                    response = try await AuthonClient.login(username: username, password: password)
                 }
 
                 guard response.success else {
                     throw AuthonClient.AuthonError.server(response.message ?? "Error desconocido")
                 }
 
-                // Guardar credenciales en Keychain (usuario y contraseña)
                 KeychainHelper.save(service: keychainService, account: "username", value: username)
                 KeychainHelper.save(service: keychainService, account: "password", value: password)
 
-                // Guardar tokens si los hay
                 if let accessToken = response.accessToken {
                     KeychainHelper.save(service: keychainService, account: "accessToken", value: accessToken)
                 }
                 if let refreshToken = response.refreshToken {
                     KeychainHelper.save(service: keychainService, account: "refreshToken", value: refreshToken)
                 }
+
+                self.sessionID = response.sessionId ?? UUID().uuidString
 
                 await MainActor.run {
                     self.username = username
@@ -102,13 +94,11 @@ class MoonAuthManager: ObservableObject {
     }
 
     func logout() {
-        // Opcional: llamar a logout de Authon
         Task {
             if let sessionId = sessionID {
                 _ = try? await AuthonClient.logout(sessionId: sessionId)
             }
         }
-        // Limpiar Keychain
         KeychainHelper.delete(service: keychainService, account: "username")
         KeychainHelper.delete(service: keychainService, account: "password")
         KeychainHelper.delete(service: keychainService, account: "accessToken")
