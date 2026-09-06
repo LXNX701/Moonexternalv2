@@ -24,9 +24,10 @@ struct MoonLoginView: View {
                         .clipShape(Circle())
                         .shadow(color: .moonGlow, radius: 20)
 
+                    // Título con gradiente usando overlay (compatible con iOS 16)
                     Text("MOONZAZA")
                         .font(.largeTitle.weight(.bold))
-                        .foregroundStyle(LinearGradient.moonGradient)
+                        .moonGradientText()  // Definido en DesignSystem
                     + Text(" x ")
                         .font(.largeTitle.weight(.bold))
                         .foregroundColor(.white)
@@ -41,7 +42,6 @@ struct MoonLoginView: View {
 
                 // Tarjeta de login
                 VStack(spacing: 16) {
-                    // Picker Login/Register
                     Picker("", selection: $isRegister) {
                         Text("Login").tag(false)
                         Text("Register").tag(true)
@@ -49,7 +49,6 @@ struct MoonLoginView: View {
                     .pickerStyle(.segmented)
                     .tint(.moonPrimary)
 
-                    // Campos
                     MoonTextField(icon: "person", placeholder: "Username", text: $username)
                     MoonTextField(icon: "lock", placeholder: "Password", text: $password, isSecure: true)
 
@@ -57,7 +56,6 @@ struct MoonLoginView: View {
                         MoonTextField(icon: "key", placeholder: "License Key", text: $license)
                     }
 
-                    // Mensaje de error
                     if let error = auth.errorMessage {
                         Text(error)
                             .font(.caption)
@@ -68,7 +66,6 @@ struct MoonLoginView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
 
-                    // Botón
                     Button {
                         auth.submit(
                             username: username,
