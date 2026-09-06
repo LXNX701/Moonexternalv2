@@ -1,11 +1,15 @@
+
 import Foundation
 
 enum MoonConfig {
-    // Authon credentials (las que me diste)
-    static let authonPublicKey = "pk_live_mrF1aKsYSA-dip-59W-vOc2V9vCshOQ8xWRuaHuzfeA"
-    static let authonSecretKey = "sk_live_ha4DIP-hb6RZfhK9_YpXXujN5LkGxErPugVDbWIvMo0"
-    static let authonAppName = "moonexternal"  // Debe coincidir con tu proyecto en Authon
-    static let authonAPIURL = "https://api.authon.dev"  // Base URL de la API
+    // AuthlyX credentials (usando el SDK oficial)
+    static let authlyxOwnerId = "530bfb579331"
+    static let authlyxAppName = "Moonexternal"
+    static let authlyxVersion = "1.0.0"
+    static let authlyxSecret = "AoSZF4szatA7uxPgVIqdQoyu7ISgaAqkxHjZNdX2"
+    
+    // Opcional: URL personalizada si usas dominio propio
+    // static let authlyxAPI = "https://api.authlyx.com/v2"  // <-- si es diferente
 
     static let placeName = "MOONZAZA x Cheat"
 }
