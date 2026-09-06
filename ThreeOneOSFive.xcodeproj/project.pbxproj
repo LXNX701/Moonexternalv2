@@ -69,7 +69,6 @@
 		3105A228 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3105A120; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
 		3105CB11 /* MoonConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB01; };
-		3105CB12 /* KeyAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB02; };
 		3105CB13 /* MoonAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB03; };
 		3105CB14 /* MoonLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB04; };
 		3105CB15 /* MoonPlaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105CB05; };
@@ -172,7 +171,6 @@
 		3105A122 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/Localizable.strings; sourceTree = "<group>"; };
 		3105B123 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		3105CB01 /* MoonConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonConfig.swift; sourceTree = "<group>"; };
-		3105CB02 /* KeyAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthClient.swift; sourceTree = "<group>"; };
 		3105CB03 /* MoonAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonAuthManager.swift; sourceTree = "<group>"; };
 		3105CB04 /* MoonLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonLoginView.swift; sourceTree = "<group>"; };
 		3105CB05 /* MoonPlaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPlaceView.swift; sourceTree = "<group>"; };
@@ -320,7 +318,6 @@
 			isa = PBXGroup;
 			children = (
 				3105CB01 /* MoonConfig.swift */,
-				3105CB02 /* KeyAuthClient.swift */,
 				3105CB03 /* MoonAuthManager.swift */,
 				3105CB04 /* MoonLoginView.swift */,
 				3105CB05 /* MoonPlaceView.swift */,
@@ -481,7 +478,6 @@
 				3105I200,
 				3105I201,
 				3105CB11,
-				3105CB12,
 				3105CB13,
 				3105CB14,
 				3105CB15,
