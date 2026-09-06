@@ -10,7 +10,7 @@ enum MoonConfig {
     static let keyAuthOwnerID = "SQc5dKoope"
     static let keyAuthSecret = "f19bf244f73f3a81f3877c3aaf42f3a7e526d90a83795845412f7194e27fb617"
     static let keyAuthAppVersion = "1.0"
-    static let keyAuthAPIURL = "https://keyauth.win/api/1.3/"
+    static let keyAuthAPIURL = "https://keyauth.com/api/1.3/"
 
     static let placeName = "Moon Place"
 }
