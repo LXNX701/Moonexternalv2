@@ -12,7 +12,7 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
 
       - name: Verificar recursos de parches
         shell: bash
