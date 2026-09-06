@@ -79,16 +79,18 @@ struct MoonPlaceView: View {
                             .frame(height: 28)
                             .clipShape(Circle())
 
-                        // Título con gradiente usando overlay (compatible iOS 16)
-                        Text("MOONZAZA")
-                            .font(.headline.weight(.bold))
-                            .moonGradientText()
-                        + Text(" x ")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        + Text("Cheat")
-                            .font(.headline.weight(.bold))
-                            .foregroundColor(.moonSecondary)
+                        // Título con HStack en lugar de concatenación
+                        HStack(spacing: 0) {
+                            Text("MOONZAZA")
+                                .font(.headline.weight(.bold))
+                                .moonGradientText()
+                            Text(" x ")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Text("Cheat")
+                                .font(.headline.weight(.bold))
+                                .foregroundColor(.moonSecondary)
+                        }
                     }
                 }
 
@@ -168,7 +170,7 @@ struct MoonPlaceView: View {
     }
 }
 
-// MARK: - Subviews (con colores compatibles)
+// MARK: - Subviews (sin cambios funcionales)
 
 private struct ExploitStatusHeader: View {
     @ObservedObject var appState: AppState
@@ -231,7 +233,7 @@ private struct ExploitStatusHeader: View {
     }
 }
 
-// MARK: - MoonV1 Section (sin cambios adicionales)
+// MARK: - MoonV1 Section
 
 private struct MoonV1Section: View {
     @ObservedObject var store: PatchProjectStore
@@ -296,7 +298,7 @@ private struct MoonV1Section: View {
     }
 }
 
-// MARK: - MoonV2 Section (sin cambios adicionales)
+// MARK: - MoonV2 Section
 
 private struct MoonV2Section: View {
     @ObservedObject var store: PatchProjectStore
@@ -420,7 +422,7 @@ private struct MoonV2Section: View {
     }
 }
 
-// MARK: - MoonPatchRow (sin cambios adicionales)
+// MARK: - MoonPatchRow
 
 private struct MoonPatchRow: View {
     let item: PatchLibraryItem
