@@ -1,9 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Menú principal de Moon Place tras iniciar sesión.
-/// Muestra dos apartados: MoonV1 (opciones propias, por ahora importables)
-/// y MoonV2 (opciones ya hechas, incluidas dentro de la app).
+/// Menú principal de MOONZAZA x Cheat tras iniciar sesión.
 struct MoonPlaceView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var auth: MoonAuthManager
@@ -13,14 +11,12 @@ struct MoonPlaceView: View {
     @State private var showWelcomeBadge = true
 
     enum MoonSection: String, CaseIterable, Identifiable {
-        case moonV1 = "MoonV1"
-        case moonV2 = "MoonV2"
+        case moonV1 = "🌙 MoonV1"
+        case moonV2 = "⚡ MoonV2"
         var id: String { rawValue }
     }
 
-    /// Catálogo de parches incluidos en la app (carpeta moonplace/MoonV2Patches).
-    /// Para añadir más opciones más adelante: copia el .3105 a esa carpeta,
-    /// añádelo en project.pbxproj (Resources) y agrégalo a esta lista.
+    /// Catálogo de parches incluidos en la app
     static let bundledMoonV2Patches: [(resource: String, name: String)] = [
         ("MOON_FFTH_ANTENA_0", "FFTH - Antena 1"),
         ("MOON_FFTH_ANTENA_1", "FFTH - Antena 2"),
@@ -43,11 +39,21 @@ struct MoonPlaceView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fondo con partículas personalizadas (ajustaremos colores después)
                 MoonParticleBackground()
-                VStack(spacing: 0) {
-                    ExploitStatusHeader(appState: appState)
-                    Divider()
+                    .overlay(
+                        LinearGradient.moonBackgroundGradient
+                            .opacity(0.3)
+                    )
 
+                VStack(spacing: 0) {
+                    // Cabecera de estado del exploit (rediseñada)
+                    ExploitStatusHeader(appState: appState)
+
+                    Divider()
+                        .background(Color.moonPrimary.opacity(0.3))
+
+                    // Picker estilizado
                     Picker("", selection: $section) {
                         ForEach(MoonSection.allCases) { s in
                             Text(s.rawValue).tag(s)
@@ -56,18 +62,47 @@ struct MoonPlaceView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
                     .padding(.vertical, 10)
+                    .colorMultiply(.white)
+                    .tint(.moonPrimary)
 
-                    switch section {
-                    case .moonV1:
-                        MoonV1Section(store: store)
-                    case .moonV2:
-                        MoonV2Section(store: store)
+                    // Contenido según sección
+                    ScrollView {
+                        switch section {
+                        case .moonV1:
+                            MoonV1Section(store: store)
+                        case .moonV2:
+                            MoonV2Section(store: store)
+                        }
                     }
                 }
             }
-            .navigationTitle("Moon Place")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Título personalizado con logo
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+                        // Tu logo (asegúrate de tener "MoonLogo" en Assets)
+                        Image("MoonLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 30)
+                            .clipShape(Circle())
+
+                        Text("MOONZAZA")
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(
+                                LinearGradient.moonGradient
+                            )
+                        + Text(" x ")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        + Text("Cheat")
+                            .font(.headline.weight(.bold))
+                            .foregroundColor(.moonSecondary)
+                    }
+                }
+
+                // Botón de menú de usuario
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
@@ -75,13 +110,19 @@ struct MoonPlaceView: View {
                         } label: {
                             Label("Welcome message", systemImage: "sparkles")
                         }
+                        Divider()
                         Button(role: .destructive) {
                             auth.logout()
                         } label: {
                             Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
+                                .foregroundColor(.moonSecondary)
                         }
                     } label: {
-                        Image(systemName: "person.crop.circle")
+                        Image(systemName: "person.crop.circle.fill")
+                            .foregroundStyle(
+                                LinearGradient.moonGradient
+                            )
+                            .font(.title3)
                     }
                 }
             }
@@ -94,7 +135,8 @@ struct MoonPlaceView: View {
             }
             .alert(item: $store.alert) { alert in
                 Alert(
-                    title: Text(alert.titleKey == "common.done" ? "Done" : "Failed"),
+                    title: Text(alert.titleKey == "common.done" ? "✅ Done" : "❌ Failed")
+                        .foregroundColor(alert.titleKey == "common.done" ? .green : .moonSecondary),
                     message: Text(alert.message(language: .english)),
                     dismissButton: .default(Text("OK"))
                 )
@@ -112,116 +154,146 @@ struct MoonPlaceView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .tint(Color.indigo)
+        .tint(.moonPrimary)
     }
 
     private func welcomeBadge(_ user: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Image(systemName: "moon.stars.fill")
-            Text("Welcome to Moon Place, \(user)")
+                .foregroundStyle(
+                    LinearGradient.moonGradient
+                )
+            Text("Welcome to MOONZAZA, \(user)")
                 .font(.subheadline.weight(.semibold))
+                .foregroundColor(.white)
+            Image(systemName: "sparkles")
+                .foregroundColor(.moonSecondary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Capsule().fill(.ultraThinMaterial))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.moonBorder, lineWidth: 1)
+                )
+        )
+        .shadow(color: .moonGlow, radius: 10)
     }
 }
 
-// MARK: - Cabecera de estado del exploit
+// MARK: - Cabecera de estado del exploit (rediseñada)
 
 private struct ExploitStatusHeader: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
+            // Indicador de estado con animación
             Circle()
-                .fill(color)
+                .fill(statusColor)
                 .frame(width: 10, height: 10)
-            Text(label)
-                .font(.footnote.weight(.medium))
+                .overlay(
+                    Circle()
+                        .stroke(statusColor.opacity(0.4), lineWidth: 3)
+                        .scaleEffect(appState.kernelExploitRunning ? 1.5 : 1)
+                        .opacity(appState.kernelExploitRunning ? 1 : 0)
+                        .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: appState.kernelExploitRunning)
+                )
+
+            Text(statusLabel)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(statusColor)
+
             Spacer()
-            if !appState.exploitStatus.isSuccess {
-                Button("Activate") {
+
+            if !appState.exploitStatus.isSuccess && !appState.kernelExploitRunning {
+                Button("🔓 Activate") {
                     appState.runKernelExploitIfNeeded()
                 }
-                .font(.footnote.bold())
-                .buttonStyle(.bordered)
+                .font(.caption.weight(.bold))
+                .buttonStyle(MoonButtonStyle())
                 .controlSize(.small)
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
+        .background(
+            Color.moonCard.opacity(0.5)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.moonBorder, lineWidth: 0.5)
+                )
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
-    private var color: Color {
+    private var statusColor: Color {
         if appState.kernelExploitRunning { return .yellow }
         if appState.exploitStatus.isSuccess { return .green }
-        if case .failed = appState.exploitStatus { return .red }
+        if case .failed = appState.exploitStatus { return .moonSecondary }
         return .gray
     }
 
-    private var label: String {
-        if appState.kernelExploitRunning { return "Activating full access…" }
-        if appState.exploitStatus.isSuccess {
-            return "Full access active — patches ready"
-        }
-        if case .failed = appState.exploitStatus {
-            return "Activation failed — relaunch the app and retry"
-        }
-        if case .unsupported(let reason) = appState.exploitStatus {
-            return "Not supported on \(reason)"
-        }
-        return "Tap Activate before applying patches"
+    private var statusLabel: String {
+        if appState.kernelExploitRunning { return "Activating full access..." }
+        if appState.exploitStatus.isSuccess { return "✅ Full access active" }
+        if case .failed = appState.exploitStatus { return "❌ Activation failed" }
+        if case .unsupported(let reason) = appState.exploitStatus { return "⚠️ Not supported on \(reason)" }
+        return "🔓 Tap Activate before applying patches"
     }
 }
 
-// MARK: - MoonV1
+// MARK: - MoonV1 Section (rediseñada)
 
 private struct MoonV1Section: View {
     @ObservedObject var store: PatchProjectStore
     @State private var showImporter = false
 
     var body: some View {
-        List {
-            Section {
-                if store.items.isEmpty {
-                    VStack(spacing: 10) {
-                        Image(systemName: "moonphase.new.moon")
-                            .font(.system(size: 42, weight: .light))
-                            .foregroundStyle(Color.indigo)
-                        Text("MoonV1")
-                            .font(.headline)
-                        Text("Options for MoonV1 are coming soon. You can already import your own .3105 options created with 3105.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+        VStack {
+            if store.items.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "moonphase.new.moon")
+                        .font(.system(size: 50, weight: .light))
+                        .foregroundStyle(
+                            LinearGradient.moonGradient
+                        )
+
+                    Text("🌙 MoonV1")
+                        .moonTitleStyle()
+
+                    Text("Import your own .3105 patches created with 3105.")
+                        .moonSubtitleStyle()
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        showImporter = true
+                    } label: {
+                        Label("Import Patch", systemImage: "square.and.arrow.down")
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 48)
-                    .listRowSeparator(.hidden)
-                } else {
+                    .buttonStyle(MoonButtonStyle())
+                    .disabled(store.isBusy)
+                }
+                .padding(40)
+                .moonCard()
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+            } else {
+                List {
                     ForEach(store.items) { item in
                         MoonPatchRow(item: item, store: store)
                     }
                 }
-            } header: {
-                Text("My options")
-            } footer: {
-                Text("Each option includes Apply and Restore Originals.")
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
         }
-        .listStyle(.insetGrouped)
         .refreshable { store.reload() }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showImporter = true
-                } label: {
-                    Image(systemName: "square.and.arrow.down")
-                }
-                .disabled(store.isBusy)
-            }
-        }
         .sheet(isPresented: $showImporter) {
             FileDocumentPicker(
                 allowedContentTypes: [UTType(filenameExtension: "3105") ?? .data, .data],
@@ -240,14 +312,13 @@ private struct MoonV1Section: View {
     }
 }
 
-// MARK: - MoonV2
+// MARK: - MoonV2 Section (rediseñada)
 
 private struct MoonV2Section: View {
     @ObservedObject var store: PatchProjectStore
     @State private var family = "FFTH"
     @State private var antenna = "ANTENA"
 
-    /// Nombres de recursos ya instalados en la librería (persistido).
     @AppStorage("moon.v2.installedPatches") private var installedPatchesRaw = ""
 
     private var installedSet: Set<String> {
@@ -255,40 +326,48 @@ private struct MoonV2Section: View {
     }
 
     var body: some View {
-        List {
-            Section {
+        VStack(spacing: 16) {
+            // Filtros estilizados
+            VStack(spacing: 12) {
                 Picker("Familia", selection: $family) {
                     Text("FFTH").tag("FFTH")
                     Text("FFMAX").tag("FFMAX")
                 }
                 .pickerStyle(.segmented)
+                .colorMultiply(.white)
+                .tint(.moonPrimary)
+
                 Picker("Antena", selection: $antenna) {
                     Text("Con antena").tag("ANTENA")
                     Text("Sin antena").tag("SIN_ANTENA")
                 }
                 .pickerStyle(.segmented)
+                .colorMultiply(.white)
+                .tint(.moonPrimary)
             }
-            Section {
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+
+            // Lista de parches filtrados
+            List {
                 ForEach(filteredEntries, id: \.resource) { entry in
                     bundledRow(entry)
+                        .listRowBackground(Color.moonCard.opacity(0.5))
                 }
-            } header: {
-                Text("MoonV2 options")
-            } footer: {
-                Text("Ready-made options. Tap Install once, then Apply. Restore Originals undoes any applied option.")
-            }
 
-            if !store.items.isEmpty {
-                Section {
-                    ForEach(store.items) { item in
-                        MoonPatchRow(item: item, store: store)
+                if !store.items.isEmpty {
+                    Section("📦 Installed Patches") {
+                        ForEach(store.items) { item in
+                            MoonPatchRow(item: item, store: store)
+                                .listRowBackground(Color.moonCard.opacity(0.5))
+                        }
                     }
-                } header: {
-                    Text("Installed patches")
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
         }
-        .listStyle(.insetGrouped)
         .refreshable { store.reload() }
     }
 
@@ -301,32 +380,40 @@ private struct MoonV2Section: View {
     @ViewBuilder
     private func bundledRow(_ entry: (resource: String, name: String)) -> some View {
         let isInstalled = installedSet.contains(entry.resource)
-        HStack(spacing: 12) {
-            Image(systemName: "shippingbox.fill")
-                .foregroundStyle(Color.indigo)
-                .frame(width: 26)
-            VStack(alignment: .leading, spacing: 3) {
+
+        HStack(spacing: 14) {
+            Image(systemName: isInstalled ? "checkmark.circle.fill" : "shippingbox.fill")
+                .foregroundStyle(isInstalled ? .green : LinearGradient.moonGradient)
+                .font(.title3)
+                .frame(width: 30)
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)
                     .font(.body.weight(.semibold))
-                Text(isInstalled ? "Installed" : "Ready to install")
+                    .foregroundColor(.white)
+                Text(isInstalled ? "✅ Installed" : "📥 Ready to install")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isInstalled ? .green : .gray)
             }
+
             Spacer()
+
             if store.isBusy {
-                ProgressView().controlSize(.small)
+                ProgressView()
+                    .tint(.moonPrimary)
             } else if !isInstalled {
                 Button("Install") {
                     install(entry)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(MoonButtonStyle())
                 .controlSize(.small)
             } else {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundColor(.green)
+                    .font(.title2)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 
     private func install(_ entry: (resource: String, name: String)) {
@@ -351,7 +438,7 @@ private struct MoonV2Section: View {
     }
 }
 
-// MARK: - Fila de parche instalado (Apply / Restore Originals)
+// MARK: - MoonPatchRow (rediseñada)
 
 private struct MoonPatchRow: View {
     let item: PatchLibraryItem
@@ -367,44 +454,58 @@ private struct MoonPatchRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: item.isLocked ? "lock.doc.fill" : "moon.zzz.fill")
-                    .foregroundStyle(Color.indigo)
-                VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                Image(systemName: item.isLocked ? "lock.doc.fill" : "doc.fill")
+                    .foregroundStyle(item.isLocked ? .gray : LinearGradient.moonGradient)
+                    .font(.title3)
+                    .frame(width: 30)
+
+                VStack(alignment: .leading, spacing: 4) {
                     Text(item.project?.name ?? "Locked patch")
                         .font(.body.weight(.semibold))
+                        .foregroundColor(.white)
+
                     if !item.isLocked {
-                        Text(receipt != nil ? "Applied — original files backed up" : "Not applied")
-                            .font(.caption)
-                            .foregroundStyle(receipt != nil ? .green : .secondary)
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(receipt != nil ? Color.green : Color.gray)
+                                .frame(width: 6, height: 6)
+                            Text(receipt != nil ? "Applied" : "Not applied")
+                                .font(.caption)
+                                .foregroundStyle(receipt != nil ? .green : .gray)
+                        }
                     }
                 }
+
                 Spacer()
+
                 if isWorking {
-                    ProgressView().controlSize(.small)
+                    ProgressView()
+                        .tint(.moonPrimary)
                 }
             }
 
             if item.isLocked {
-                Text("This patch is password protected. Unlock it from the original 3105 Patches section.")
+                Text("🔒 Password protected. Unlock from the original 3105 Patches section.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.gray)
+                    .padding(.leading, 44)
             } else {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     Button {
                         showApplyConfirm = true
                     } label: {
                         Label("Apply", systemImage: "checkmark.shield.fill")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(MoonButtonStyle())
                     .disabled(isWorking || store.isBusy)
 
                     Button(role: .destructive) {
                         showRestoreConfirm = true
                     } label: {
-                        Label("Restore Originals", systemImage: "arrow.uturn.backward.circle")
+                        Label("Restore", systemImage: "arrow.uturn.backward.circle")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -412,32 +513,34 @@ private struct MoonPatchRow: View {
                     .disabled(isWorking || store.isBusy || receipt == nil)
                 }
                 .controlSize(.small)
+                .padding(.leading, 44)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
         .confirmationDialog(
             "Apply this patch?",
             isPresented: $showApplyConfirm,
             titleVisibility: .visible
         ) {
-            Button("Apply") { apply() }
+            Button("Apply", action: apply)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The original files are backed up automatically so you can restore them later.")
+            Text("Original files will be backed up automatically.")
         }
         .confirmationDialog(
             "Restore original files?",
             isPresented: $showRestoreConfirm,
             titleVisibility: .visible
         ) {
-            Button("Restore Originals", role: .destructive) { restore() }
+            Button("Restore Originals", role: .destructive, action: restore)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This undoes the patch and puts the original files back.")
+            Text("This undoes the patch and restores original files.")
         }
         .alert(item: $resultAlert) { alert in
             Alert(
-                title: Text(alert.titleKey == "common.done" ? "Done" : "Failed"),
+                title: Text(alert.titleKey == "common.done" ? "✅ Done" : "❌ Failed")
+                    .foregroundColor(alert.titleKey == "common.done" ? .green : .moonSecondary),
                 message: Text(alert.message(language: .english)),
                 dismissButton: .default(Text("OK"))
             )
