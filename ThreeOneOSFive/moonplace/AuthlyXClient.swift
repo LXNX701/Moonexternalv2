@@ -1,7 +1,7 @@
 import Foundation
 
 enum AuthlyXClient {
-    // URL BASE CORRECTA (sin rutas adicionales)
+    // ÚNICA URL BASE (sin rutas adicionales)
     private static var apiBase: URL {
         URL(string: "https://authly.cc/api/v2")!
     }
@@ -9,7 +9,6 @@ enum AuthlyXClient {
     private static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
         return URLSession(configuration: config)
     }()
 
@@ -60,7 +59,7 @@ enum AuthlyXClient {
             "ver": MoonConfig.authlyxVersion
         ])
 
-        guard response.success, let sessionID = response.sessionid, !sessionID.isEmpty else {
+        guard response.success, let sessionID = response.sessionid else {
             throw AuthlyXError.server(response.message ?? "No se pudo inicializar la sesión")
         }
         return sessionID
@@ -114,14 +113,14 @@ enum AuthlyXClient {
         return response.success
     }
 
-    // MARK: - Petición HTTP genérica
+    // MARK: - Petición HTTP
 
     private static func post(_ parameters: [String: String]) async throws -> Response {
-        // DEBUG: Ver qué URL y parámetros se están usando
+        // DEBUG: Ver qué URL se está usando
         print("🌐 URL: \(apiBase.absoluteString)")
         print("📦 Parámetros: \(parameters)")
 
-        var request = URLRequest(url: apiBase)
+        var request = URLRequest(url: apiBase)  // <-- SIN rutas adicionales
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
