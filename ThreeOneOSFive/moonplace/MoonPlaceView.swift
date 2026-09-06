@@ -39,7 +39,7 @@ struct MoonPlaceView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fondo con partículas personalizadas (ajustaremos colores después)
+                // Fondo con partículas
                 MoonParticleBackground()
                     .overlay(
                         LinearGradient.moonBackgroundGradient
@@ -81,7 +81,7 @@ struct MoonPlaceView: View {
                 // Título personalizado con logo
                 ToolbarItem(placement: .principal) {
                     HStack(spacing: 8) {
-                        // Tu logo (asegúrate de tener "MoonLogo" en Assets)
+                        // Tu logo (debe estar en Assets como "MoonLogo")
                         Image("MoonLogo")
                             .resizable()
                             .scaledToFit()
