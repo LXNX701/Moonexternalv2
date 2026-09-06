@@ -1,9 +1,6 @@
 import SwiftUI
 import Combine
 
-// Importar el SDK de AuthlyX
-import AuthlyX
-
 class MoonAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isLoading = false
@@ -11,19 +8,10 @@ class MoonAuthManager: ObservableObject {
     @Published var username: String?
     @Published var justWelcomed = false
 
+    private var sessionID: String?
     private let keychainService = "MoonAuth"
-    private let authlyX: AuthlyX
 
     init() {
-        // Inicializar con tus credenciales de AuthlyX
-        authlyX = AuthlyX(
-            ownerId: "530bfb579331",
-            appName: "Moonexternal",
-            version: "1.0.0",
-            secret: "AoSZF4szatA7uxPgVIqdQoyu7ISgaAqkxHjZNdX2"
-        )
-        // Opcional: desactivar logs en producción
-        // authlyX.debug = false
         autoLogin()
     }
 
@@ -35,7 +23,9 @@ class MoonAuthManager: ObservableObject {
 
         Task {
             do {
-                let response = try await authlyX.login(username: storedUsername, password: storedPassword)
+                let session = try await AuthlyXClient.initialize()
+                self.sessionID = session
+                let response = try await AuthlyXClient.login(sessionID: session, username: storedUsername, password: storedPassword)
                 if response.success {
                     await MainActor.run {
                         self.username = storedUsername
@@ -43,7 +33,7 @@ class MoonAuthManager: ObservableObject {
                         self.justWelcomed = true
                     }
                 } else {
-                    throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Auto-login failed"])
+                    throw AuthlyXClient.AuthlyXError.server(response.message ?? "Auto-login failed")
                 }
             } catch {
                 await MainActor.run {
@@ -59,18 +49,30 @@ class MoonAuthManager: ObservableObject {
 
         Task {
             do {
-                let response: AuthlyX.Response
+                let session = try await AuthlyXClient.initialize()
+                self.sessionID = session
+
+                let response: AuthlyXClient.Response
                 if isRegister {
                     guard let license = license, !license.isEmpty else {
-                        throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: "License key requerida para registro"])
+                        throw AuthlyXClient.AuthlyXError.server("License key requerida para registro")
                     }
-                    response = try await authlyX.register(username: username, password: password, license: license)
+                    response = try await AuthlyXClient.register(
+                        sessionID: session,
+                        username: username,
+                        password: password,
+                        license: license
+                    )
                 } else {
-                    response = try await authlyX.login(username: username, password: password)
+                    response = try await AuthlyXClient.login(
+                        sessionID: session,
+                        username: username,
+                        password: password
+                    )
                 }
 
                 guard response.success else {
-                    throw NSError(domain: "AuthlyX", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Error desconocido"])
+                    throw AuthlyXClient.AuthlyXError.server(response.message ?? "Error desconocido")
                 }
 
                 // Guardar credenciales en Keychain
@@ -95,11 +97,14 @@ class MoonAuthManager: ObservableObject {
 
     func logout() {
         Task {
-            _ = try? await authlyX.logout()
+            if let sessionId = sessionID {
+                _ = try? await AuthlyXClient.logout(sessionID: sessionId)
+            }
         }
         KeychainHelper.delete(service: keychainService, account: "username")
         KeychainHelper.delete(service: keychainService, account: "password")
         isAuthenticated = false
+        sessionID = nil
         username = nil
         justWelcomed = false
     }
