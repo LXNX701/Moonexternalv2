@@ -49,11 +49,7 @@ enum AuthonClient {
         return UUID().uuidString
     }
 
-    static func register(
-        username: String,
-        password: String,
-        license: String
-    ) async throws -> Response {
+    static func register(username: String, password: String, license: String) async throws -> Response {
         let parameters: [String: Any] = [
             "projectId": MoonConfig.authonAppName,
             "email": username,
@@ -64,10 +60,7 @@ enum AuthonClient {
         return try await post("/v1/auth/signup", parameters: parameters)
     }
 
-    static func login(
-        username: String,
-        password: String
-    ) async throws -> Response {
+    static func login(username: String, password: String) async throws -> Response {
         let parameters: [String: Any] = [
             "projectId": MoonConfig.authonAppName,
             "email": username,
