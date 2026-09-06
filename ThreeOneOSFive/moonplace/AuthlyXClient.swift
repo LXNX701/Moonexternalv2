@@ -1,7 +1,7 @@
 import Foundation
 
 enum AuthlyXClient {
-    // ÚNICA URL BASE (sin rutas adicionales)
+    // ✅ URL CORRECTA (verificada)
     private static var apiBase: URL {
         URL(string: "https://authly.cc/api/v2")!
     }
@@ -113,14 +113,16 @@ enum AuthlyXClient {
         return response.success
     }
 
-    // MARK: - Petición HTTP
+    // MARK: - Petición HTTP (CON DEPURACIÓN)
 
     private static func post(_ parameters: [String: String]) async throws -> Response {
-        // DEBUG: Ver qué URL se está usando
+        // 📡 IMPRIMIR TODO PARA DEPURAR
+        print("==========================================")
         print("🌐 URL: \(apiBase.absoluteString)")
         print("📦 Parámetros: \(parameters)")
+        print("==========================================")
 
-        var request = URLRequest(url: apiBase)  // <-- SIN rutas adicionales
+        var request = URLRequest(url: apiBase)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
@@ -134,6 +136,7 @@ enum AuthlyXClient {
         request.httpBody = body.data(using: .utf8)
 
         print("📤 Body: \(body)")
+        print("==========================================")
 
         let (data, response) = try await session.data(for: request)
 
@@ -142,15 +145,18 @@ enum AuthlyXClient {
         }
 
         print("📊 Status Code: \(httpResponse.statusCode)")
+        print("==========================================")
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let raw = String(data: data, encoding: .utf8) ?? "sin datos"
+            print("❌ ERROR: \(raw)")
             throw AuthlyXError.server("AuthlyX HTTP \(httpResponse.statusCode) - \(raw)")
         }
 
         if let raw = String(data: data, encoding: .utf8) {
-            print("📡 AuthlyX raw: \(raw)")
+            print("✅ RESPUESTA: \(raw)")
         }
+        print("==========================================")
 
         do {
             return try JSONDecoder().decode(Response.self, from: data)
