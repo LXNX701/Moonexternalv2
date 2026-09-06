@@ -1,7 +1,7 @@
 import Foundation
 
 enum AuthlyXClient {
-    // URL CORRECTA de AuthlyX (versión v2)
+    // URL BASE CORRECTA (sin rutas adicionales)
     private static var apiBase: URL {
         URL(string: "https://authly.cc/api/v2")!
     }
@@ -9,6 +9,7 @@ enum AuthlyXClient {
     private static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
         return URLSession(configuration: config)
     }()
 
@@ -42,6 +43,8 @@ enum AuthlyXClient {
         }
     }
 
+    // MARK: - Inicialización
+
     static func initialize() async throws -> String {
         guard !MoonConfig.authlyxAppName.isEmpty,
               !MoonConfig.authlyxOwnerId.isEmpty,
@@ -57,11 +60,13 @@ enum AuthlyXClient {
             "ver": MoonConfig.authlyxVersion
         ])
 
-        guard response.success, let sessionID = response.sessionid else {
+        guard response.success, let sessionID = response.sessionid, !sessionID.isEmpty else {
             throw AuthlyXError.server(response.message ?? "No se pudo inicializar la sesión")
         }
         return sessionID
     }
+
+    // MARK: - Registro
 
     static func register(
         sessionID: String,
@@ -81,6 +86,8 @@ enum AuthlyXClient {
         ])
     }
 
+    // MARK: - Login
+
     static func login(
         sessionID: String,
         username: String,
@@ -97,6 +104,8 @@ enum AuthlyXClient {
         ])
     }
 
+    // MARK: - Logout
+
     static func logout(sessionID: String) async throws -> Bool {
         let response = try await post([
             "type": "logout",
@@ -105,8 +114,12 @@ enum AuthlyXClient {
         return response.success
     }
 
+    // MARK: - Petición HTTP genérica
+
     private static func post(_ parameters: [String: String]) async throws -> Response {
-        print("🌐 Conectando a AuthlyX: \(apiBase.absoluteString)")
+        // DEBUG: Ver qué URL y parámetros se están usando
+        print("🌐 URL: \(apiBase.absoluteString)")
+        print("📦 Parámetros: \(parameters)")
 
         var request = URLRequest(url: apiBase)
         request.httpMethod = "POST"
@@ -121,12 +134,19 @@ enum AuthlyXClient {
             .joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 
+        print("📤 Body: \(body)")
+
         let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            throw AuthlyXError.server("AuthlyX HTTP \(statusCode)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthlyXError.server("Respuesta HTTP inválida")
+        }
+
+        print("📊 Status Code: \(httpResponse.statusCode)")
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let raw = String(data: data, encoding: .utf8) ?? "sin datos"
+            throw AuthlyXError.server("AuthlyX HTTP \(httpResponse.statusCode) - \(raw)")
         }
 
         if let raw = String(data: data, encoding: .utf8) {
