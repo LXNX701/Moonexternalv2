@@ -1,211 +1,145 @@
 import SwiftUI
 
-/// Pantalla de bienvenida / acceso de Moon Place.
-/// - Registro: usuario + contraseña + license key de KeyAuth.
-/// - Login: usuario + contraseña.
 struct MoonLoginView: View {
     @ObservedObject var auth: MoonAuthManager
-
-    @State private var mode: Mode = .login
     @State private var username = ""
     @State private var password = ""
-    @State private var licenseKey = ""
-
-    enum Mode: String, CaseIterable, Identifiable {
-        case login = "Login"
-        case register = "New User"
-        var id: String { rawValue }
-    }
+    @State private var license = ""
+    @State private var isRegister = false
 
     var body: some View {
         ZStack {
             MoonParticleBackground()
+                .overlay(
+                    LinearGradient.moonBackgroundGradient.opacity(0.4)
+                )
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    header
-                    card
+            VStack(spacing: 24) {
+                // Logo y título
+                VStack(spacing: 8) {
+                    Image("MoonLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .shadow(color: .moonGlow, radius: 20)
+
+                    Text("MOONZAZA")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundStyle(LinearGradient.moonGradient)
+                    + Text(" x ")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundColor(.white)
+                    + Text("Cheat")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundColor(.moonSecondary)
+
+                    Text(isRegister ? "Create your account" : "Sign in to continue")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+
+                // Tarjeta de login
+                VStack(spacing: 16) {
+                    // Picker Login/Register
+                    Picker("", selection: $isRegister) {
+                        Text("Login").tag(false)
+                        Text("Register").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .tint(.moonPrimary)
+
+                    // Campos
+                    MoonTextField(icon: "person", placeholder: "Username", text: $username)
+                    MoonTextField(icon: "lock", placeholder: "Password", text: $password, isSecure: true)
+
+                    if isRegister {
+                        MoonTextField(icon: "key", placeholder: "License Key", text: $license)
+                    }
+
+                    // Mensaje de error
+                    if let error = auth.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.moonSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(8)
+                            .background(Color.moonSecondary.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+
+                    // Botón
+                    Button {
+                        auth.submit(
+                            username: username,
+                            password: password,
+                            license: isRegister ? license : nil,
+                            isRegister: isRegister
+                        )
+                    } label: {
+                        HStack {
+                            if auth.isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.8)
+                            }
+                            Text(auth.isLoading ? "Loading..." : (isRegister ? "Create Account" : "Sign In"))
+                                .font(.headline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    }
+                    .buttonStyle(MoonButtonStyle())
+                    .disabled(auth.isLoading || username.isEmpty || password.isEmpty)
+                    .opacity((auth.isLoading || username.isEmpty || password.isEmpty) ? 0.6 : 1)
                 }
                 .padding(24)
-            }
-        }
-    }
-
-    private var header: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "moon.stars.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.white, Color.indigo],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                )
-            if let logo = UIImage(named: "MoonLogo") {
-                Image(uiImage: logo)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 310, maxHeight: 150)
-                    .shadow(color: .red.opacity(0.7), radius: 18)
-            } else {
-                Text("MOON PLACE")
-                    .font(.title.bold())
-                    .foregroundStyle(.white)
-            }
-            Text(mode == .login ? "Welcome back" : "Welcome, new user")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.7))
-        }
-        .padding(.top, 40)
-    }
-
-    private var card: some View {
-        VStack(spacing: 16) {
-            Picker("", selection: $mode) {
-                ForEach(Mode.allCases) { m in
-                    Text(m.rawValue).tag(m)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            VStack(spacing: 12) {
-                TextField("Username", text: $username)
-                    .textContentType(.username)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .moonField()
-
-                SecureField("Password", text: $password)
-                    .textContentType(mode == .register ? .newPassword : .password)
-                    .moonField()
-
-                if mode == .register {
-                    TextField("License Key", text: $licenseKey)
-                        .font(.body.monospaced())
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .moonField()
-                }
-            }
-
-            if let error = auth.errorMessage {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-            }
-
-                    if let status = auth.statusMessage {
-                    Label(status, systemImage: "bolt.horizontal.circle")
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.75))
-                    }
-
-            Button(action: submit) {
-                Group {
-                    if auth.isBusy {
-                        ProgressView().tint(.white)
-                    } else {
-                        Text(mode == .login ? "Enter Moon Place" : "Create Account")
-                            .bold()
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
                 .background(
-                    Capsule().fill(
-                        LinearGradient(
-                            colors: [Color.indigo, Color.purple],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
+                    Color.moonCard.opacity(0.8)
+                        .background(.ultraThinMaterial)
                 )
-                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.moonBorder, lineWidth: 1)
+                )
+                .shadow(color: .moonGlow, radius: 20)
+                .padding(.horizontal, 20)
             }
-            .disabled(auth.isBusy)
-            .opacity(auth.isBusy ? 0.7 : 1)
-            .onSubmit(submit)
-
-            Text("Access powered by KeyAuth")
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.4))
+            .padding(.vertical, 40)
         }
-        .padding(20)
-        .background(RoundedRectangle(cornerRadius: 22).fill(.ultraThinMaterial))
-    }
-
-    private var isValid: Bool {
-        guard !username.trimmingCharacters(in: .whitespaces).isEmpty,
-              password.count >= 4 else { return false }
-        if mode == .register {
-            return !licenseKey.trimmingCharacters(in: .whitespaces).isEmpty
-        }
-        return true
-    }
-
-    private func submit() {
-        let user = username.trimmingCharacters(in: .whitespaces)
-        guard !user.isEmpty else {
-            auth.errorMessage = "Escribe tu usuario."
-            return
-        }
-        guard password.count >= 4 else {
-            auth.errorMessage = "La contrasena debe tener al menos 4 caracteres."
-            return
-        }
-        switch mode {
-        case .login:
-            auth.login(username: user, password: password)
-        case .register:
-            auth.register(
-                username: user,
-                password: password,
-                licenseKey: licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-        }
+        .preferredColorScheme(.dark)
     }
 }
 
-struct MoonParticleBackground: View {
-    @State private var animate = false
-    private let colors: [Color] = [.red, .pink, .purple, .indigo]
+struct MoonTextField: View {
+    let icon: String
+    let placeholder: String
+    @Binding var text: String
+    var isSecure = false
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [.black, Color(red: 0.16, green: 0.01, blue: 0.12), .black],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            ForEach(0..<18, id: \.self) { index in
-                Circle()
-                    .fill(colors[index % colors.count].opacity(0.35))
-                    .frame(width: CGFloat(3 + (index % 4) * 2))
-                    .blur(radius: 1)
-                    .offset(
-                        x: CGFloat((index * 47) % 360) - 180,
-                        y: animate
-                            ? CGFloat((index * 71) % 760) - 380
-                            : CGFloat((index * 71 + 110) % 760) - 380
-                    )
-                    .animation(
-                        .easeInOut(duration: Double(4 + index % 5)).repeatForever(autoreverses: true),
-                        value: animate
-                    )
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.gray)
+                .frame(width: 20)
+
+            if isSecure {
+                SecureField(placeholder, text: $text)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+            } else {
+                TextField(placeholder, text: $text)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
             }
         }
-        .ignoresSafeArea()
-        .onAppear { animate = true }
-    }
-}
-
-private extension View {
-    func moonField() -> some View {
-        self
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.35)))
-            .foregroundStyle(.white)
-            .tint(Color.indigo)
+        .padding(14)
+        .background(Color.moonBackground.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.moonBorder, lineWidth: 0.5)
+        )
     }
 }
