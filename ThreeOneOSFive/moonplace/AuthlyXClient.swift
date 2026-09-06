@@ -1,9 +1,9 @@
 import Foundation
 
 enum AuthlyXClient {
+    // URL CORRECTA de AuthlyX (versión v2)
     private static var apiBase: URL {
-        // Usar el dominio correcto de AuthlyX
-        URL(string: "https://api.authly.cc/v1/")!
+        URL(string: "https://authly.cc/api/v2")!
     }
 
     private static let session: URLSession = {
@@ -106,6 +106,8 @@ enum AuthlyXClient {
     }
 
     private static func post(_ parameters: [String: String]) async throws -> Response {
+        print("🌐 Conectando a AuthlyX: \(apiBase.absoluteString)")
+
         var request = URLRequest(url: apiBase)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
