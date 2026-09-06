@@ -24,16 +24,18 @@ struct MoonLoginView: View {
                         .clipShape(Circle())
                         .shadow(color: .moonGlow, radius: 20)
 
-                    // Título con gradiente usando overlay (compatible con iOS 16)
-                    Text("MOONZAZA")
-                        .font(.largeTitle.weight(.bold))
-                        .moonGradientText()  // Definido en DesignSystem
-                    + Text(" x ")
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(.white)
-                    + Text("Cheat")
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(.moonSecondary)
+                    // Título con HStack en lugar de concatenación
+                    HStack(spacing: 0) {
+                        Text("MOONZAZA")
+                            .font(.largeTitle.weight(.bold))
+                            .moonGradientText()
+                        Text(" x ")
+                            .font(.largeTitle.weight(.bold))
+                            .foregroundColor(.white)
+                        Text("Cheat")
+                            .font(.largeTitle.weight(.bold))
+                            .foregroundColor(.moonSecondary)
+                    }
 
                     Text(isRegister ? "Create your account" : "Sign in to continue")
                         .font(.subheadline)
