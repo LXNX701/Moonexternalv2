@@ -1,181 +1,121 @@
-import Foundation
-import Security
+import SwiftUI
+import Combine
 
-/// Gestiona la sesión de Moon Place: registro/login contra KeyAuth,
-/// persistencia del usuario en Keychain y auto-login al reabrir la app.
-@MainActor
-final class MoonAuthManager: ObservableObject {
+class MoonAuthManager: ObservableObject {
     @Published var isAuthenticated = false
-    @Published var username: String?
-    @Published var isBusy = false
+    @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var statusMessage: String?
+    @Published var username: String?
     @Published var justWelcomed = false
 
     private var sessionID: String?
-
-    private static let service = "cc.moonplace.auth"
-    private static let account = "moon-user"
+    private let keychainService = "MoonAuth"
 
     init() {
-        tryAutoLogin()
+        autoLogin()
     }
 
-    // MARK: - Registro / Login
+    func autoLogin() {
+        guard let storedUsername = KeychainHelper.get(service: keychainService, account: "username"),
+              let storedPassword = KeychainHelper.get(service: keychainService, account: "password") else {
+            return
+        }
 
-    func register(username: String, password: String, licenseKey: String) {
-        guard !isBusy else { return }
-        errorMessage = nil
-        statusMessage = "Conectando con KeyAuth..."
-        isBusy = true
-        Task { [weak self] in
-            guard let self else { return }
+        Task {
             do {
-                let session = try await KeyAuthClient.initialize()
-                let response = try await KeyAuthClient.register(
-                    sessionID: session,
-                    username: username,
-                    password: password,
-                    license: licenseKey
-                )
-                guard response.success else {
-                    throw KeyAuthClient.KeyAuthError.server(
-                        response.message ?? "No se pudo registrar el usuario"
-                    )
+                _ = try await AuthonClient.initialize()
+                let response = try await AuthonClient.login(username: storedUsername, password: storedPassword)
+                if response.success, let accessToken = response.accessToken {
+                    // Guardar tokens si es necesario
+                    self.sessionID = accessToken
+                    await MainActor.run {
+                        self.username = storedUsername
+                        self.isAuthenticated = true
+                        self.justWelcomed = true
+                    }
+                } else {
+                    throw AuthonClient.AuthonError.server(response.message ?? "Auto-login failed")
                 }
-                self.saveCredentials(username: username, password: password)
-                self.finishSuccess(username: username, sessionID: session)
             } catch {
-                self.fail(error)
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                }
             }
         }
     }
 
-    func login(username: String, password: String) {
-        guard !isBusy else { return }
+    func submit(username: String, password: String, license: String?, isRegister: Bool) {
+        isLoading = true
         errorMessage = nil
-        statusMessage = "Conectando con KeyAuth..."
-        isBusy = true
-        Task { [weak self] in
-            guard let self else { return }
+
+        Task {
             do {
-                let session = try await KeyAuthClient.initialize()
-                let response = try await KeyAuthClient.login(
-                    sessionID: session,
-                    username: username,
-                    password: password
-                )
-                guard response.success else {
-                    throw KeyAuthClient.KeyAuthError.server(
-                        response.message ?? "Usuario o contraseña incorrectos"
+                _ = try await AuthonClient.initialize()
+
+                let response: AuthonClient.Response
+                if isRegister {
+                    guard let license = license, !license.isEmpty else {
+                        throw AuthonClient.AuthonError.server("License key requerida para registro")
+                    }
+                    response = try await AuthonClient.register(
+                        username: username,
+                        password: password,
+                        license: license
+                    )
+                } else {
+                    response = try await AuthonClient.login(
+                        username: username,
+                        password: password
                     )
                 }
-                self.saveCredentials(username: username, password: password)
-                self.finishSuccess(username: username, sessionID: session)
+
+                guard response.success else {
+                    throw AuthonClient.AuthonError.server(response.message ?? "Error desconocido")
+                }
+
+                // Guardar credenciales en Keychain (usuario y contraseña)
+                KeychainHelper.save(service: keychainService, account: "username", value: username)
+                KeychainHelper.save(service: keychainService, account: "password", value: password)
+
+                // Guardar tokens si los hay
+                if let accessToken = response.accessToken {
+                    KeychainHelper.save(service: keychainService, account: "accessToken", value: accessToken)
+                }
+                if let refreshToken = response.refreshToken {
+                    KeychainHelper.save(service: keychainService, account: "refreshToken", value: refreshToken)
+                }
+
+                await MainActor.run {
+                    self.username = username
+                    self.isLoading = false
+                    self.isAuthenticated = true
+                    self.justWelcomed = true
+                }
+
             } catch {
-                self.fail(error)
+                await MainActor.run {
+                    self.isLoading = false
+                    self.errorMessage = error.localizedDescription
+                }
             }
         }
     }
 
     func logout() {
-        try? KeychainHelper.delete(service: Self.service, account: Self.account)
-        sessionID = nil
-        username = nil
-        isAuthenticated = false
-        justWelcomed = false
-        statusMessage = nil
-    }
-
-    // MARK: - Privado
-
-    private func tryAutoLogin() {
-        guard let credentials = KeychainHelper.load(service: Self.service, account: Self.account),
-              let username = credentials.username,
-              let password = credentials.password else {
-            return
-        }
-        isBusy = true
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let session = try await KeyAuthClient.initialize()
-                let response = try await KeyAuthClient.login(
-                    sessionID: session,
-                    username: username,
-                    password: password
-                )
-                guard response.success else {
-                    self.isBusy = false
-                    return // sesión guardada inválida → mostrar login normal
-                }
-                self.finishSuccess(username: username, sessionID: session, silent: true)
-            } catch {
-                self.isBusy = false // sin red u otro error → mostrar login
+        // Opcional: llamar a logout de Authon
+        Task {
+            if let sessionId = sessionID {
+                _ = try? await AuthonClient.logout(sessionId: sessionId)
             }
         }
-    }
-
-    private func finishSuccess(username: String, sessionID: String, silent: Bool = false) {
-        self.sessionID = sessionID
-        self.username = username
-        self.isAuthenticated = true
-        self.justWelcomed = !silent
-        self.isBusy = false
-        self.statusMessage = nil
-    }
-
-    private func fail(_ error: Error) {
-        errorMessage = error.localizedDescription
-        isBusy = false
-        statusMessage = nil
-    }
-
-    private func saveCredentials(username: String, password: String) {
-        KeychainHelper.save(
-            username: username,
-            password: password,
-            service: Self.service,
-            account: Self.account
-        )
-    }
-}
-
-/// Keychain mínimo para guardar las credenciales del usuario de Moon Place.
-enum KeychainHelper {
-    private static func baseQuery(service: String, account: String) -> [String: Any] {
-        [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
-    }
-
-    static func save(username: String, password: String, service: String, account: String) {
-        let data = "\(username)\u{1F}\(password)".data(using: .utf8) ?? Data()
-        var query = baseQuery(service: service, account: account)
-        SecItemDelete(query as CFDictionary)
-        query[kSecValueData as String] = data
-        query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-        SecItemAdd(query as CFDictionary, nil)
-    }
-
-    static func load(service: String, account: String) -> (username: String?, password: String?)? {
-        var query = baseQuery(service: service, account: account)
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data,
-              let combined = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        let parts = combined.components(separatedBy: "\u{1F}")
-        guard parts.count == 2 else { return nil }
-        return (parts[0], parts[1])
-    }
-
-    static func delete(service: String, account: String) {
-        SecItemDelete(baseQuery(service: service, account: account) as CFDictionary)
+        // Limpiar Keychain
+        KeychainHelper.delete(service: keychainService, account: "username")
+        KeychainHelper.delete(service: keychainService, account: "password")
+        KeychainHelper.delete(service: keychainService, account: "accessToken")
+        KeychainHelper.delete(service: keychainService, account: "refreshToken")
+        isAuthenticated = false
+        sessionID = nil
+        username = nil
+        justWelcomed = false
     }
 }
