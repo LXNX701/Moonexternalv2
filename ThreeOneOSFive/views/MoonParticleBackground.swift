@@ -9,7 +9,7 @@ struct MoonParticleBackground: View {
         )
         .ignoresSafeArea()
         .overlay(
-            // Puedes agregar partículas simples con Canvas si quieres, pero por ahora es un gradiente
+            // Puedes agregar partículas aquí si quieres, pero por ahora un gradiente es suficiente
             Image(systemName: "sparkles")
                 .font(.largeTitle)
                 .foregroundColor(.white.opacity(0.1))
