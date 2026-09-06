@@ -79,9 +79,10 @@ struct MoonPlaceView: View {
                             .frame(height: 28)
                             .clipShape(Circle())
 
+                        // Título con gradiente usando overlay (compatible iOS 16)
                         Text("MOONZAZA")
                             .font(.headline.weight(.bold))
-                            .foregroundColor(.moonPrimary)
+                            .moonGradientText()
                         + Text(" x ")
                             .font(.headline)
                             .foregroundColor(.white)
@@ -167,7 +168,7 @@ struct MoonPlaceView: View {
     }
 }
 
-// MARK: - Subviews (mantengo las mismas que ya tenías, solo ajusto colores)
+// MARK: - Subviews (con colores compatibles)
 
 private struct ExploitStatusHeader: View {
     @ObservedObject var appState: AppState
@@ -229,6 +230,8 @@ private struct ExploitStatusHeader: View {
         return "🔓 Tap Activate before applying patches"
     }
 }
+
+// MARK: - MoonV1 Section (sin cambios adicionales)
 
 private struct MoonV1Section: View {
     @ObservedObject var store: PatchProjectStore
@@ -292,6 +295,8 @@ private struct MoonV1Section: View {
         }
     }
 }
+
+// MARK: - MoonV2 Section (sin cambios adicionales)
 
 private struct MoonV2Section: View {
     @ObservedObject var store: PatchProjectStore
@@ -414,6 +419,8 @@ private struct MoonV2Section: View {
         installedPatchesRaw = set.joined(separator: "\n")
     }
 }
+
+// MARK: - MoonPatchRow (sin cambios adicionales)
 
 private struct MoonPatchRow: View {
     let item: PatchLibraryItem
